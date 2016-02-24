@@ -60,6 +60,13 @@
 				var $this = $(this);
 				this.multiDatesPicker.changed = false;
 				
+				this.multiDatesPicker.shiftHeld = false;
+				this.multiDatesPicker.shiftRangeFrom = false;
+				this.multiDatesPicker.shiftRangeTo = false;
+				$(this).bind('keyup keydown', function (e) {
+					this.multiDatesPicker.shiftHeld = e.shiftKey;
+				});
+				
 				var mdp_events = {
 					beforeShow: function(input, inst) {
 						this.multiDatesPicker.changed = false;
@@ -69,6 +76,42 @@
 					onSelect : function(dateText, inst) {
 						var $this = $(this);
 						this.multiDatesPicker.changed = true;
+						// workaround for refresh glitch
+						inst.settings.defaultDate = dateText;
+
+						if (this.multiDatesPicker.shiftHeld) {
+							// store the last selected date as range end if pressing shift
+							this.multiDatesPicker.shiftRangeTo = dateText;
+						}
+						else {
+							// store the last selected date as range start if not pressing shift
+							this.multiDatesPicker.shiftRangeFrom = dateText;
+						}
+						
+						if (this.multiDatesPicker.shiftRangeFrom && this.multiDatesPicker.shiftRangeTo) {
+							// add all dates
+							var dateFormat = $.datepicker._get(inst, "dateFormat");
+							var startDate = $.datepicker.parseDate(dateFormat, this.multiDatesPicker.shiftRangeFrom);
+							var endDate = $.datepicker.parseDate(dateFormat, this.multiDatesPicker.shiftRangeTo);
+							var currentDate = startDate;
+							var between = [];
+							
+							// the end date becomes the start date for the next range selection
+							this.multiDatesPicker.shiftRangeFrom = this.multiDatesPicker.shiftRangeTo;
+							// no longer used
+							this.multiDatesPicker.shiftRangeTo = false;
+							
+							while (currentDate <= endDate) {
+							    between.push(new Date(currentDate));
+							    currentDate.setDate(currentDate.getDate() + 1);
+							}
+							
+							if (between.length > 0) {
+								methods.addDates.call(this, between);
+								this.multiDatesPicker.changed = true;
+								return false;
+							}
+						}
 						
 						if (dateText) {
 							$this.multiDatesPicker('toggleDate', dateText);
