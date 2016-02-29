@@ -102,14 +102,14 @@
 							this.multiDatesPicker.shiftRangeTo = false;
 							
 							while (currentDate <= endDate) {
-							    between.push(new Date(currentDate));
+							    between.push($.datepicker.formatDate(dateFormat, currentDate));
 							    currentDate.setDate(currentDate.getDate() + 1);
 							}
 							
 							if (between.length > 0) {
-								methods.addDates.call(this, between);
+								$this.multiDatesPicker('addDates', between);
 								this.multiDatesPicker.changed = true;
-								return false;
+								return;
 							}
 						}
 						
